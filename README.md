@@ -6,6 +6,7 @@ Control a switched dehumidifier based on relative humidity from an external sens
 
 ## Required Devices
 A switch that is controllable by SmartThngs
+
 A humidity sensor that reports to SmartThings
 
 ## Installation via GitHub Integration
