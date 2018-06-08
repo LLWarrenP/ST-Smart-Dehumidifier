@@ -18,12 +18,12 @@ def appVersion() {
 	return "1.2"
 }
 
-/**
+/*
 * Change Log:
 * 2018-6-8 - (1.2) Tweaked for GitHub and uploaded
 * 2018-6-7 - (1.1) Added the option to have minimum cycle off time in case the dehumidifier does not have cycle protection (uncommon unless old)
 * 2018-6-2 - (1.0) Initial release
-**/
+*/
 
 definition(
     name: "Smart Dehumidifier Control",
