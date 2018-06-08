@@ -4,7 +4,7 @@ Smart Dehumidifier Control
 ## Summary
 Control a switched dehumidifier based on relative humidity from an external sensor
 
-##Required Devices
+## Required Devices
 A switch that is controllable by SmartThngs
 A humidity sensor that reports to SmartThings
 
