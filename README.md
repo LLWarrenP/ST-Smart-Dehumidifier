@@ -41,17 +41,17 @@ first be installed into your SmartThings SmartApps repository.
 # App Settings
 Desired Humidity Setpoint: %RH that you want to target, defaults to 50% which is a good place to start
 
-Also allow an overshoot of +/-: %RH that you want to allow above/below the setpoint before it turns on/off, defaults to 0% and can be up to 25%. 5% is a good place to start and if combined with the default setpoint of 50% would establish a 45%-55% band. Also helps to alleviate excessive switching since the %RH can fluctuate quickly.
+**Also allow an overshoot of +/-:** %RH that you want to allow above/below the setpoint before it turns on/off, defaults to 0% and can be up to 25%. 5% is a good place to start and if combined with the default setpoint of 50% would establish a 45%-55% band. Also helps to alleviate excessive switching since the %RH can fluctuate quickly.
 
-Require a minimum off cycle time of this many minutes: A setting that allows you to not turn on the dehumidifier too soon. Most dehumidifiers have sensors in them to not run the compressor blindly but this ensures a minimum amount of off time. The default is 0 but 5 minutes is probably adequate if you need the feature. A dehumidifier that has this protection built in will typically run the fan for a period of time when powering up (very typical unless the dehumidifier is old).
+**Require a minimum off cycle time of this many minutes:** A setting that allows you to not turn on the dehumidifier too soon. Most dehumidifiers have sensors in them to not run the compressor blindly but this ensures a minimum amount of off time. The default is 0 but 5 minutes is probably adequate if you need the feature. A dehumidifier that already has this protection built in will typically run the fan for a period of time when powering up (very typical unless the dehumidifier is old).
 
-Continuous Runtime Notifications: Here you set the desired notifications for a push or push+SMS. It’s also where you set the runtime threshold “Maximum Runtime (Hours)” which defaults to 0 (no notifications ever) and up to 48 hours. This will depend on how long you expect the dehumidifier to cycle. I think something like 2 or 4 hours is probably a good place to start but it really depends on the dehumidifier and the space it runs in.
+**Continuous Runtime Notifications:** Here you set the desired notifications for a push or push+SMS. It’s also where you set the runtime threshold “Maximum Runtime (Hours)” which defaults to 0 (no notifications ever) and up to 48 hours. This will depend on how long you expect the dehumidifier to cycle. I think something like 2 or 4 hours is probably a good place to start but it really depends on the dehumidifier and the space it runs in.
 
 # App Logging
 There is no “user” logging of routine operations in the Messages tab of the ST phone app but if you enable the alert (see above) you’ll get the push message which also will be logged there. The default push message is basically:
 
-Warning: Dehumidifier has run continuously for more than 2 hours. Humidity is 62% 
+*Warning: Dehumidifier has run continuously for more than 2 hours. Humidity is 62%*
 
 There is plenty of debug logging that the app does and you can see from the Groovy IDE. Messages include the current %RH changes that are reported to the app and if the dehumidifier is on, and for how long, or off and when it is turned off how long it ran for. A typical message (one of them anyway) is:
 
-humidity is above 45% +/-5%, humidifier has been running for 107 minutes 
+*humidity is above 45% +/-5%, humidifier has been running for 107 minutes*
