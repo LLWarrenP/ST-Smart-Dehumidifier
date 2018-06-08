@@ -4,14 +4,13 @@ Smart Dehumidifier Control
 # Summary
 Controls a switched dehumidifier based on relative humidity from an external sensor
 
-The “tricky” part about this is the humidity sensor reporting. Depending on the sensor it might not report changes very frequently or it could blast out a lot of noise (aka same readings). The Halo is a bit chatty but it seems to only report a change in humidity when there actually is a change. So, fairly responsive but not annoying. I can only guess that some of the battery powered sensors, you might have fewer reports in an effort to save battery but that too could be an issue. So far for me the Halo has been working in this “unintended purpose”.
+The dehumidifier is plugged into a smart switch which simply turns the power on and off depending on the relative humidity reading from the external humidity sensor of some sort.  Depending on the sensor it might not report changes very frequently or it could blast out a lot of noise (aka same readings).  Some of the battery powered sensors might have fewer reports in an effort to save battery while others may report lots of data.
 
-Almost goes without saying but this app depends on your dehumidifier to be able to run continuously (i.e. have a drain) and be able to restart from power off. For those that are worried about turning on and off the power on the dehumidifier, don’t. It won’t shorten the life. I’ve been controlling window A/Cs this way using solid-state relays for 20 years (up until recently, now with ST!) without issues.
+This app depends on your dehumidifier to be able to run continuously (i.e. have a drain) and be able to auto-restart from power off. For those that are worried about turning on and off the power on the dehumidifier, don’t. It won’t shorten the life but there is a feature to ensure a minimum off cycle time if so desired.
 
 # Required Devices
-A switch that is controllable by SmartThngs
-
-A humidity sensor that reports to SmartThings
+1. A switch that is controllable by SmartThngs
+2. A humidity sensor that reports to SmartThings
 
 # Installation
 
