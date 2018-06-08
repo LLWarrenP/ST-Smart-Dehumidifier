@@ -1,4 +1,4 @@
-/**
+/*
  *  Smart Dehumidifier
  *
  *  Copyright 2018 Warren Poschman
