@@ -15,14 +15,15 @@
  */
  
 def appVersion() {
-	return "1.2"
+	return "1.3"
 }
 
 /*
 * Change Log:
-* 2018-6-8 - (1.2) Tweaked for GitHub and uploaded
-* 2018-6-7 - (1.1) Added the option to have minimum cycle off time in case the dehumidifier does not have cycle protection (uncommon unless old)
-* 2018-6-2 - (1.0) Initial release
+* 2018-6-11 - (1.3) Added display for last/current RH in app settings
+* 2018-6-8  - (1.2) Tweaked for GitHub and uploaded
+* 2018-6-7  - (1.1) Added the option to have minimum cycle off time in case the dehumidifier does not have cycle protection (uncommon unless old)
+* 2018-6-2  - (1.0) Initial release
 */
 
 definition(
@@ -35,8 +36,17 @@ definition(
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/water_moisture@2x.png",
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Meta/water_moisture@2x.png")
 
+def showLastRH(lastRH) {
+	if (lastRH == null) {
+		lastRH = "Updating..."
+	}
+	return lastRH
+}
+
+
 preferences {
 	section("Smart Dehumidifier Control v${appVersion()}")
+	section("Last Humidity Reading: ${showLastRH(atomicState.lastRH)}%")
    	section("Control which Dehumidifier:") {
 		input "dehumidifier", "capability.switch", required:true
 	}
@@ -74,6 +84,7 @@ def updated() {
 def humidityHandler(evt) {
 	log.debug "humidity changed to: ${evt.value}%"
 	def currentHumidity = Integer.parseInt(evt.value.replace("%", ""))
+    state[frequencyLastRH(evt)] = currentHumidity
 
 	def overshoot = humidityOvershoot.toInteger()
 	def runtime = maxRuntime.toInteger()
@@ -117,8 +128,8 @@ def humidityHandler(evt) {
 	// Humidity is below the setpoint plus any allowable overshoot, turn off dehumidifier if required
 	if (currentHumidity <= adjustedMinThreshold) {
     	// Log current status and relevant runtime
-		if (state[frequencyStatus(evt)] == "on") log.debug "humidity is below ${humiditySetpoint}% +/-${overshoot}%, turning off dehumidifier after running for ${timePassedRoundMinutes} minutes"
-		else log.debug "humidity is below ${humiditySetpoint}% +/-${overshoot}%, dehumidifier off"
+		if (state[frequencyStatus(evt)] == "on") log.debug "humidity (${currentHumidity}%) is below ${humiditySetpoint}% +/-${overshoot}%, turning off dehumidifier after running for ${timePassedRoundMinutes} minutes"
+		else log.debug "humidity (${currentHumidity}%) is below ${humiditySetpoint}% +/-${overshoot}%, dehumidifier off"
 		dehumidifier.off()			// Always, just in case it was on manually
 		state[frequencyStatus(evt)] = "off"
 		state[frequencyLastOff(evt)] = now()
@@ -135,11 +146,11 @@ def humidityHandler(evt) {
 		// If dehumidifier is off according to the state machine, log whether we are turning it on or waiting for the minimum off cycle
 		// or if it is already on, log that it is running and for how long
 		if (state[frequencyStatus(evt)] == "off") {
-			if (timeCycleRoundMinutes.toInteger() >= cycleTime.toInteger()) log.debug "humidity is above ${humiditySetpoint}% +/-${overshoot}%, turning on dehumidifier"
+			if (timeCycleRoundMinutes.toInteger() >= cycleTime.toInteger()) log.debug "humidity (${currentHumidity}%) is above ${humiditySetpoint}% +/-${overshoot}%, turning on dehumidifier"
 			// Dehumidifier is off but hasn't been off long enough - only really necessary if dehumidifier does not have cycle protection built in (uncommon today)
-			else log.debug "humidity is above ${humiditySetpoint}% +/-${overshoot}%, waiting for a minimum cycle time of ${cycleTime} minutes"
+			else log.debug "humidity (${currentHumidity}%) is above ${humiditySetpoint}% +/-${overshoot}%, waiting for a minimum cycle time of ${cycleTime} minutes"
 		}
-		else log.debug "humidity is above ${humiditySetpoint}% +/-${overshoot}%, humidifier has been running for ${timePassedRoundMinutes} minutes"
+		else log.debug "humidity (${currentHumidity}%) is above ${humiditySetpoint}% +/-${overshoot}%, humidifier has been running for ${timePassedRoundMinutes} minutes"
 		// If the minimum off cycle time has passed, turn the dehumidifier on
 		if (timeCycleRoundMinutes.toInteger() >= cycleTime.toInteger()) {
 			// If the dehumidifier was off according to the state machine, begin to track when it was turned on
@@ -180,6 +191,10 @@ private frequencyLastOn(evt) {
 
 private frequencyLastOff(evt) {
 	"lastOffTimeStamp"
+}
+
+private frequencyLastRH(evt) {
+	"lastRH"
 }
 
 private frequencyStatus(evt) {
