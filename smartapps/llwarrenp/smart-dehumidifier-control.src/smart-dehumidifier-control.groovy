@@ -20,7 +20,7 @@ def appVersion() {
 
 /*
 * Change Log:
-* 2018-6-11 - (1.3) Added display for last/current RH in app settings
+* 2018-6-14 - (1.3) Added display for last/current RH and status in app settings
 * 2018-6-8  - (1.2) Tweaked for GitHub and uploaded
 * 2018-6-7  - (1.1) Added the option to have minimum cycle off time in case the dehumidifier does not have cycle protection (uncommon unless old)
 * 2018-6-2  - (1.0) Initial release
@@ -36,17 +36,16 @@ definition(
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/water_moisture@2x.png",
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Meta/water_moisture@2x.png")
 
-def showLastRH(lastRH) {
-	if (lastRH == null) {
-		lastRH = "Updating..."
+def showLast(last) {
+	if (last == null) {
+		last = "Updating..."
 	}
-	return lastRH
+	return last
 }
 
 
 preferences {
-	section("Smart Dehumidifier Control v${appVersion()}")
-	section("Last Humidity Reading: ${showLastRH(atomicState.lastRH)}%")
+	section("Smart Dehumidifier Control v${appVersion()}\n\n   Last Equipment Status: ${showLast(atomicState.lastStatus)}\n   Last Humidity Reading: ${showLast(atomicState.lastRH)}%")
    	section("Control which Dehumidifier:") {
 		input "dehumidifier", "capability.switch", required:true
 	}
