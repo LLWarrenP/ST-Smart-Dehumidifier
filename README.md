@@ -6,11 +6,12 @@ Controls a switched dehumidifier based on relative humidity from an external sen
 
 The dehumidifier is plugged into a smart switch which simply turns the power on and off depending on the relative humidity reading from the external humidity sensor of some sort.  Depending on the sensor it might not report changes very frequently or it could blast out a lot of noise (aka same readings).  Some of the battery powered sensors might have fewer reports in an effort to save battery while others may report lots of data.
 
-This app depends on your dehumidifier to be able to run continuously (i.e. have a drain) and be able to auto-restart from power off. For those that are worried about turning on and off the power on the dehumidifier, don’t. It won’t shorten the life but there is a feature to ensure a minimum off cycle time if so desired.
+This app depends on your dehumidifier to be able to run continuously (i.e. have a drain) and be able to auto-restart from power off. For those that are worried about turning on and off the power on the dehumidifier, don’t. It won’t shorten the life but there is a feature to ensure a minimum off cycle time if so desired.  The app also can optionally monitor doors and windows equipped with contact open/close sensors to avoid running the dehumidifier.
 
 # Required Devices
 1. A switch that is controllable by SmartThngs
 2. A humidity sensor that reports to SmartThings
+3. (optional) A door or window equipped with a contact open/close sensor
 
 # Installation
 
@@ -46,6 +47,8 @@ Desired Humidity Setpoint: %RH that you want to target, defaults to 50% which is
 **Require a minimum off cycle time of this many minutes:** A setting that allows you to not turn on the dehumidifier too soon. Most dehumidifiers have sensors in them to not run the compressor blindly but this ensures a minimum amount of off time. The default is 0 but 5 minutes is probably adequate if you need the feature. A dehumidifier that already has this protection built in will typically run the fan for a period of time when powering up (very typical unless the dehumidifier is old).
 
 **Continuous Runtime Notifications:** Here you set the desired notifications for a push or push+SMS. It’s also where you set the runtime threshold “Maximum Runtime (Hours)” which defaults to 0 (no notifications ever) and up to 48 hours. This will depend on how long you expect the dehumidifier to cycle. I think something like 2 or 4 hours is probably a good place to start but it really depends on the dehumidifier and the space it runs in.
+
+**Pause dehumidification while any of these doors or windows are open:** Allows the dehumidifier to pause its operation while any door or window equipped with a contact (open/close) sensor is open so as to not waste electricity dehumdifying the earth.  Also allows you to specify a maximum time for the door/window to be opened before pausing so as to not trigger during routine use.  Allows you to monitor any number of doors or windows and won't resume until all are closed again.
 
 # App Logging
 There is no “user” logging of routine operations in the Messages tab of the ST phone app but if you enable the alert (see above) you’ll get the push message which also will be logged there. The default push message is basically:
