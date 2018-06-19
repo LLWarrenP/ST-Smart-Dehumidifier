@@ -15,11 +15,12 @@
  */
  
 def appVersion() {
-	return "1.3"
+	return "1.4"
 }
 
 /*
 * Change Log:
+* 2018-6-19 - (1.4) Added feature to pause dehumidification while a door or window is open for longer than a set time
 * 2018-6-14 - (1.3) Added display for last/current RH and status in app settings
 * 2018-6-8  - (1.2) Tweaked for GitHub and uploaded
 * 2018-6-7  - (1.1) Added the option to have minimum cycle off time in case the dehumidifier does not have cycle protection (uncommon unless old)
@@ -61,6 +62,10 @@ preferences {
 	section("Require a minimum off cycle time of this many minutes:") {
 		input "minCycleTime", "number", title: "Minimum Off Cycle (Minutes)", defaultValue: 0, required:true
 	}
+    section("Pause dehumidification while any of these doors or windows are open:") {
+		input "doorwindowSensors", "capability.contactSensor", title: "Which Doors and Windows?", multiple: true, required: false
+        input "openTime", "number", title: "For how many minutes?", defaultValue: 5, required: false
+	}
 	section( "Continuous Runtime Notifications" ) {
 		input "maxRuntime", "number", title: "Maximum Runtime (Hours)", range: 0..48, defaultValue: 0, required:true
 		input "messageText", "text", title: "Custom Runtime Alert Text (optional)", required: false
@@ -72,12 +77,14 @@ preferences {
 def installed() {
 	log.debug "Installed with settings: ${settings}"
 	subscribe(humiditySensor, "humidity", humidityHandler)
+    if (doorwindowSensors) subscribe(doorwindowSensors, "contact", doorwindowHandler)
 }
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
 	unsubscribe()
 	subscribe(humiditySensor, "humidity", humidityHandler)
+    if (doorwindowSensors) subscribe(doorwindowSensors, "contact", doorwindowHandler)
 }
 
 def humidityHandler(evt) {
@@ -150,8 +157,8 @@ def humidityHandler(evt) {
 			else log.debug "humidity (${currentHumidity}%) is above ${humiditySetpoint}% +/-${overshoot}%, waiting for a minimum cycle time of ${cycleTime} minutes"
 		}
 		else log.debug "humidity (${currentHumidity}%) is above ${humiditySetpoint}% +/-${overshoot}%, humidifier has been running for ${timePassedRoundMinutes} minutes"
-		// If the minimum off cycle time has passed, turn the dehumidifier on
-		if (timeCycleRoundMinutes.toInteger() >= cycleTime.toInteger()) {
+		// If the minimum off cycle time has passed and no doors or windows are open, turn the dehumidifier on
+		if ((timeCycleRoundMinutes.toInteger() >= cycleTime.toInteger()) && (!doorwindowSensors || !doorwindowSensors.latestValue("contact").contains("open"))) {
 			// If the dehumidifier was off according to the state machine, begin to track when it was turned on
 			if ((state[frequencyStatus(evt)] == "off") || (state[frequencyStatus(evt)] == null)) state[frequencyLastOn(evt)] = now()
 			dehumidifier.on()			// Always, just in case it was off manually
@@ -182,6 +189,44 @@ def humidityHandler(evt) {
 
 	}
 
+}
+
+def doorwindowHandler(evt) {
+	// If any of the open/close contact sensors open, pause the dehumidifier until they are all closed
+	if (evt.value == "open") {
+    	// One of the selected contact sensors was opened, start a timer to pause the dehumidifier after the window elapses
+		log.debug "dehumidifier notified that a door or window was opened"
+        def pauseTimer = 0
+        if (openTime == null) pauseTimer = 0
+        else pauseTimer = openTime.toInteger() * 60
+    	runIn(pauseTimer, pauseDehumidification)
+    }
+    else if (evt.value == "closed") {
+    	// One of the selected contact sensors was closed, check to see if all are closed and resume
+        log.debug "dehumdifier notified that a door or window was closed"
+        if (!doorwindowSensors || !doorwindowSensors.latestValue("contact").contains("open")) resumeDehumidification()
+    }
+}
+
+def pauseDehumidification() {
+	unschedule(pauseDehumidification)
+	unsubscribe(humiditySensor)
+	log.debug "dehumidifier paused while doors and windows are open"
+    if (state[frequencyStatus(evt)] == "on") {
+		dehumidifier.off()
+		state[frequencyLastOff(evt)] = now()
+		state[frequencyAlert(evt)] = 0		// Reset alert interval timer
+    }
+}
+
+def resumeDehumidification() {
+	unschedule(pauseDehumidification)
+	subscribe(humiditySensor, "humidity", humidityHandler)
+    log.debug "dehumidifier resuming since doors and windows are closed"
+    if (state[frequencyStatus(evt)] == "on") {
+    	state[frequencyLastOn(evt)] = now()
+		dehumidifier.on()
+    }
 }
 
 private frequencyLastOn(evt) {
