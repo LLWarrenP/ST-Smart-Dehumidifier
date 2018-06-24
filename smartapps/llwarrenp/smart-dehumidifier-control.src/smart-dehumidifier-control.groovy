@@ -113,7 +113,7 @@ def humidityHandler(evt) {
 
 	// If state machine status is undefined, make it match the switch or if that isn't reporting, set it to off
 	// Note that this could be done all the time but shouldn't be necessary when the state is known and allows some user flexibility
-	if (state[frequencyStatus(evt)] == null) {
+	if ((state[frequencyStatus(evt)] == null) || (state[frequencyStatus(evt)] == "paused")) {
 		if ((dehumidifier.currentValue("switch") == "on") || (dehumidifier.currentValue("switch") == "off")) state[frequencyStatus(evt)] = dehumidifier.currentValue("switch")
 		else state[frequencyStatus(evt)] = "off"
 	}
