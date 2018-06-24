@@ -15,11 +15,12 @@
  */
  
 def appVersion() {
-	return "1.4"
+	return "1.5"
 }
 
 /*
 * Change Log:
+* 2018-6-23 - (1.5) Improved logic for resuming after doors/windows close and also accounting for off cycle time delays
 * 2018-6-19 - (1.4) Added feature to pause dehumidification while a door or window is open for longer than a set time
 * 2018-6-14 - (1.3) Added display for last/current RH and status in app settings
 * 2018-6-8  - (1.2) Tweaked for GitHub and uploaded
@@ -95,15 +96,16 @@ def humidityHandler(evt) {
 	def overshoot = humidityOvershoot.toInteger()
 	def runtime = maxRuntime.toInteger()
 	def cycleTime = minCycleTime.toInteger()
+	if (overshoot == null) overshoot = 0
+	if (runtime == null) runtime = 0
+	if (cycleTime == null) cycleTime = 0
+
 	def timePassedHours = 0
 	def timePassedRoundHours = 0
 	def timePassedMinutes = 0
 	def timePassedRoundMinutes = 0
 	def timeCycleMinutes = 0
 	def timeCycleRoundMinutes = 0
-	if (overshoot == null) overshoot = 0
-	if (runtime == null) runtime = 0
-	if (cycleTime == null) cycleTime = 0
 
 	// Calculate the setpoint band (setpoint +/-overshoot)
 	def adjustedMinThreshold = (humiditySetpoint.toInteger() - overshoot.toInteger())
@@ -202,14 +204,28 @@ def doorwindowHandler(evt) {
     	runIn(pauseTimer, pauseDehumidification)
     }
     else if (evt.value == "closed") {
-    	// One of the selected contact sensors was closed, check to see if all are closed and resume
-        log.debug "dehumdifier notified that a door or window was closed"
-        if (!doorwindowSensors || !doorwindowSensors.latestValue("contact").contains("open")) resumeDehumidification()
+    	// One of the selected contact sensors was closed, check to see if all are closed and resume after any required restart delay
+        if (!doorwindowSensors || !doorwindowSensors.latestValue("contact").contains("open")) {
+	        log.debug "dehumdifier notified that all doors or windows were closed"
+			unschedule(pauseDehumidification)
+        	def resumeDelay = 0
+            def timeCycleSeconds = 0
+            def timeCycleRoundSeconds
+            if (minCycleTime == null) resumeDelay = 0
+            else resumeDelay = minCycleTime.toInteger() * 60
+  			timeCycleSeconds = (now() - state[frequencyLastOff(evt)]) / 1000
+            timeCycleRoundSeconds = Math.round(timeCycleSeconds.toDouble()) + (unit ?: "")
+			resumeDelay = resumeDelay - timeCycleRoundSeconds.toInteger()
+            if (resumeDelay < 0) resumeDelay = 0
+            log.debug "dehumidifier delaying ${resumeDelay} seconds before resuming"
+        	runIn(resumeDelay, resumeDehumidification)
+        }
     }
 }
 
 def pauseDehumidification() {
 	unschedule(pauseDehumidification)
+    unschedule(resumeDehumidification)
 	unsubscribe(humiditySensor)
 	log.debug "dehumidifier paused while doors and windows are open"
     if (state[frequencyStatus(evt)] == "on") {
@@ -220,13 +236,14 @@ def pauseDehumidification() {
 }
 
 def resumeDehumidification() {
+	unschedule(resumeDehumidification)
 	unschedule(pauseDehumidification)
-	subscribe(humiditySensor, "humidity", humidityHandler)
     log.debug "dehumidifier resuming since doors and windows are closed"
     if (state[frequencyStatus(evt)] == "on") {
     	state[frequencyLastOn(evt)] = now()
 		dehumidifier.on()
     }
+	subscribe(humiditySensor, "humidity", humidityHandler)
 }
 
 private frequencyLastOn(evt) {
