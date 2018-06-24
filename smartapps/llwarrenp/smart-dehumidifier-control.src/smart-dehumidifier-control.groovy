@@ -166,31 +166,30 @@ def humidityHandler(evt) {
 			dehumidifier.on()			// Always, just in case it was off manually
 			state[frequencyStatus(evt)] = "on"
 		}
-		// Check to see that the humidifier hasn't been running too long - a sign of either failure or excessive humidity
-		if ((runtime.toInteger() != 0) && (state[frequencyStatus(evt)] == "on")) {
-			if (state[frequencyAlert(evt)] == null) state[frequencyAlert(evt)] = 0
-			if ((now() - state[frequencyLastOn(evt)]) >= (runtime.toInteger() * 3600000)) {
-				// Only alert once per period
-				if ((now() - state[frequencyAlert(evt)]) >= (runtime.toInteger() * 3600000)) {
-					log.debug "dehumidifier excessive runtime of ${timePassedRoundHours} hours - sending alerts"
-					state[frequencyAlert(evt)] = now()
-					def msg = messageText ?: "Warning: ${dehumidifier} has run continuously for more than ${timePassedRoundHours} hours.  Humidity is ${currentHumidity}%."
+    }
 
-					if (!phone || pushAndPhone != "No") {
-						log.debug "sending push"
-						sendPush(msg)
-					}
+	// Check to see that the humidifier hasn't been running too long - a sign of either failure or excessive humidity
+	if ((runtime.toInteger() != 0) && (state[frequencyStatus(evt)] == "on")) {
+		if (state[frequencyAlert(evt)] == null) state[frequencyAlert(evt)] = 0
+		if ((now() - state[frequencyLastOn(evt)]) >= (runtime.toInteger() * 3600000)) {
+			// Only alert once per period
+			if ((now() - state[frequencyAlert(evt)]) >= (runtime.toInteger() * 3600000)) {
+				log.debug "dehumidifier excessive runtime of ${timePassedRoundHours} hours - sending alerts"
+				state[frequencyAlert(evt)] = now()
+				def msg = messageText ?: "Warning: ${dehumidifier} has run continuously for more than ${timePassedRoundHours} hours.  Humidity is ${currentHumidity}%."
 
-					if (phone) {
-						log.debug "sending SMS"
-						sendSms(phone, msg)
-					}
+				if (!phone || pushAndPhone != "No") {
+					log.debug "sending push"
+					sendPush(msg)
+				}
+
+				if (phone) {
+					log.debug "sending SMS"
+					sendSms(phone, msg)
 				}
 			}
 		}
-
-	}
-
+    }
 }
 
 def doorwindowHandler(evt) {
@@ -217,7 +216,7 @@ def doorwindowHandler(evt) {
             timeCycleRoundSeconds = Math.round(timeCycleSeconds.toDouble()) + (unit ?: "")
 			resumeDelay = resumeDelay - timeCycleRoundSeconds.toInteger()
             if (resumeDelay < 0) resumeDelay = 0
-            log.debug "dehumidifier delaying ${resumeDelay} seconds before resuming"
+            else log.debug "dehumidifier delaying ${resumeDelay} seconds before resuming"
         	runIn(resumeDelay, resumeDehumidification)
         }
     }
@@ -231,6 +230,7 @@ def pauseDehumidification() {
     if (state[frequencyStatus(evt)] == "on") {
 		dehumidifier.off()
 		state[frequencyLastOff(evt)] = now()
+        state[frequencyStatus(evt)] = "paused"
 		state[frequencyAlert(evt)] = 0		// Reset alert interval timer
     }
 }
@@ -238,12 +238,14 @@ def pauseDehumidification() {
 def resumeDehumidification() {
 	unschedule(resumeDehumidification)
 	unschedule(pauseDehumidification)
-    log.debug "dehumidifier resuming since doors and windows are closed"
-    if (state[frequencyStatus(evt)] == "on") {
+    if (state[frequencyStatus(evt)] == "paused") {
+	    log.debug "dehumidifier resuming since doors and windows are closed"
     	state[frequencyLastOn(evt)] = now()
 		dehumidifier.on()
+        state[frequencyStatus(evt)] == "on"
+		subscribe(humiditySensor, "humidity", humidityHandler)
     }
-	subscribe(humiditySensor, "humidity", humidityHandler)
+    else if (state[frequencyStatus(evt)] == "off") subscribe(humiditySensor, "humidity", humidityHandler)
 }
 
 private frequencyLastOn(evt) {
