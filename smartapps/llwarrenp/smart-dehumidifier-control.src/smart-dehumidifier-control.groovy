@@ -20,6 +20,7 @@ def appVersion() {
 
 /*
 * Change Log:
+* 2018-6-24 - (1.6) Fixed bug that prevented app from loading in certain circumstances due to range preference
 * 2018-6-23 - (1.5) Improved logic for resuming after doors/windows close and also accounting for off cycle time delays
 * 2018-6-19 - (1.4) Added feature to pause dehumidification while a door or window is open for longer than a set time
 * 2018-6-14 - (1.3) Added display for last/current RH and status in app settings
@@ -55,20 +56,20 @@ preferences {
 		input "humiditySensor", "capability.relativeHumidityMeasurement", required:true
 	}
 	section("Desired Humidity Setpoint") {
-		input "humiditySetpoint", "number", title: "Setpoint % RH", defaultValue: 50, required:true
+		input "humiditySetpoint", "number", title: "Setpoint % RH", range: "0..100", defaultValue: 50, required:true
 	}
 	section("Also allow an overshoot of +/-:") {
-		input "humidityOvershoot", "number", title: "Overshoot % RH", range: 0..25, defaultValue: 0, required:true
+		input "humidityOvershoot", "number", title: "Overshoot % RH", range: "0..25", defaultValue: 0, required:true
 	}
 	section("Require a minimum off cycle time of this many minutes:") {
-		input "minCycleTime", "number", title: "Minimum Off Cycle (Minutes)", defaultValue: 0, required:true
+		input "minCycleTime", "number", title: "Minimum Off Cycle (Minutes)", range: "0..*", defaultValue: 0, required:true
 	}
     section("Pause dehumidification while any of these doors or windows are open:") {
 		input "doorwindowSensors", "capability.contactSensor", title: "Which Doors and Windows?", multiple: true, required: false
-        input "openTime", "number", title: "For how many minutes?", defaultValue: 5, required: false
+        input "openTime", "number", title: "For how many minutes?", range: "0..*", defaultValue: 5, required: false
 	}
 	section( "Continuous Runtime Notifications" ) {
-		input "maxRuntime", "number", title: "Maximum Runtime (Hours)", range: 0..48, defaultValue: 0, required:true
+		input "maxRuntime", "number", title: "Maximum Runtime (Hours)", range: "0..48", defaultValue: 0, required:true
 		input "messageText", "text", title: "Custom Runtime Alert Text (optional)", required: false
 		input "phone", "phone", title: "Phone Number (for SMS, optional)", required: false
 		input "pushAndPhone", "enum", title: "Both Push and SMS?", required: false, options: ["Yes","No"]
