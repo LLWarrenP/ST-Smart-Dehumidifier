@@ -205,7 +205,7 @@ def doorwindowHandler(evt) {
     else if (evt.value == "closed") {
     	// One of the selected contact sensors was closed, check to see if all are closed and resume after any required restart delay
         if (!doorwindowSensors || !doorwindowSensors.latestValue("contact").contains("open")) {
-	        log.debug "dehumdifier notified that all doors or windows were closed"
+	        log.debug "dehumdifier notified that all doors and windows were closed"
 			unschedule(pauseDehumidification)
         	def resumeDelay = 0
             def timeCycleSeconds = 0
