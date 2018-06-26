@@ -243,7 +243,7 @@ def resumeDehumidification() {
 	    log.debug "dehumidifier resuming since doors and windows are closed"
     	state[frequencyLastOn(evt)] = now()
 		dehumidifier.on()
-        state[frequencyStatus(evt)] == "on"
+        state[frequencyStatus(evt)] = "on"
 		subscribe(humiditySensor, "humidity", humidityHandler)
     }
     else if (state[frequencyStatus(evt)] == "off") subscribe(humiditySensor, "humidity", humidityHandler)
