@@ -15,11 +15,12 @@
  */
  
 def appVersion() {
-	return "1.6"
+	return "1.7"
 }
 
 /*
 * Change Log:
+* 2018-9-30 - (1.7) Tweak to allow for decimal % RH by rounding to nearest whole value
 * 2018-6-24 - (1.6) Fixed bug that prevented app from loading in certain circumstances due to range preference
 * 2018-6-23 - (1.5) Improved logic for resuming after doors/windows close and also accounting for off cycle time delays
 * 2018-6-19 - (1.4) Added feature to pause dehumidification while a door or window is open for longer than a set time
@@ -90,8 +91,9 @@ def updated() {
 }
 
 def humidityHandler(evt) {
-	log.debug "humidity changed to: ${evt.value}%"
-	def currentHumidity = Integer.parseInt(evt.value.replace("%", ""))
+	def rawHumidity = Math.round(Double.parseDouble(evt.value.replace("%", "")))
+    def currentHumidity = rawHumidity.toInteger();
+	log.debug "humidity changed to: ${currentHumidity}% (${evt.value}%)"
     state[frequencyLastRH(evt)] = currentHumidity
 
 	def overshoot = humidityOvershoot.toInteger()
